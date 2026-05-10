@@ -37,12 +37,15 @@ GitHub Pages rebuilds in ~1 minute. The site is at:
 
 ### Medium post-import checklist — do these BEFORE publishing
 
-Medium's importer strips several things. Every time, in Medium's editor:
+After import, in Medium's editor:
 
-- [ ] **Title** — set the H1 title at the top (importer drops it)
-- [ ] **Byline at top** — retype `*By X and Y*` as a byline and use "Add authors" to link co-authors who are Medium users
-- [ ] **Author credits at end** — add a bio block for co-authors who aren't on Medium
+- [ ] **Add co-authors via Medium's "Add authors"** — links co-authors who are Medium users so they appear on the byline with profile chips (the italic byline line in the markdown is informational only; Medium needs this UI step for official co-author attribution)
 - [ ] **Image captions** — check that figure captions render italic (importer occasionally styles them as body text)
+
+Things that are now automatic (no longer need manual fixing):
+- Title is preserved from the markdown H1.
+- Byline text (`*By X and Y*`) imports as italic text directly below the title.
+- Author credits at the end of the post — if you add a bio block at the bottom of the source markdown in `~/jycode/.../Output/blog-source--V{N}.md`, it flows through.
 
 ## Adding a NEW blog (the first time)
 

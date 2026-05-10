@@ -1,8 +1,10 @@
 ---
-layout: page
+layout: default
 title: 'Building multi-agent applications: orchestration patterns'
 permalink: /posts/agent-orchestration-patterns/
 ---
+
+# Building multi-agent applications: orchestration patterns
 
 *By James Yang and Anjan Dave*
 
