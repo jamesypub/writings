@@ -66,13 +66,12 @@ cat <<'EOF'
 
   1. Open: https://medium.com/p/import
 
-  2. Paste one of these URLs (try GitHub first; if images don't load, use Pages):
+  2. Paste this URL (GitHub Pages -- has the correct page title):
 
-     GitHub (rendered README):
-       https://github.com/jamesypub/writings/blob/main/posts/agent-orchestration-patterns/README.md
-
-     GitHub Pages (Jekyll-rendered):
        https://jamesypub.github.io/writings/posts/agent-orchestration-patterns/
+
+     Note: do NOT use the github.com/blob/ URL -- Medium reads its <title>
+     as the filename ("writings/posts/.../README.md"), not the post title.
 
   3. Click Import. Medium creates a DRAFT.
   4. Review, then click Publish on Medium.

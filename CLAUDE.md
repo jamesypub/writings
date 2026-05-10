@@ -29,11 +29,13 @@ GitHub Pages rebuilds in ~1 minute. The site is at:
 ## Importing to Medium (one-time, after each publish)
 
 1. Open `https://medium.com/p/import`
-2. Paste the URL the script printed:
-   `https://github.com/jamesypub/writings/blob/main/posts/<slug>/README.md`
+2. Paste the **GitHub Pages** URL:
+   `https://jamesypub.github.io/writings/posts/<slug>/`
 3. Click **Import**. Medium creates a draft.
 4. Fix the things Medium's importer drops (see checklist below).
 5. Click **Publish** on Medium.
+
+**Do not use** the `github.com/blob/...README.md` URL for Medium import — GitHub's blob page sets `<title>` to the filename, so Medium imports the post with a garbage title like "writings/posts/.../README.md". The Pages URL has the correct `<title>`.
 
 ### Medium post-import checklist — do these BEFORE publishing
 
