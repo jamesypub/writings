@@ -14,6 +14,8 @@ Each post lives in its own folder under `posts/` with a `README.md` (the post it
 
 Drafts, review notes, and build artifacts live in a separate private repository. This repo holds only the finished work.
 
+Browse the rendered site at **[jamesypub.github.io/writings](https://jamesypub.github.io/writings/)**.
+
 ## Author
 
 James Yang
