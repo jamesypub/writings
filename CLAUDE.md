@@ -6,16 +6,23 @@ Drafts and review history stay in `~/jycode/blog-*/`. Only allowlisted posts mov
 
 ## Publish workflow
 
+One command:
+
 ```bash
 cd ~/writings
-python3 scripts/publish.py            # dry-run — prints what would change
-python3 scripts/publish.py --apply    # copy latest V{N} + referenced images
-git add -A
-git commit -m "publish: <post-name> V<N>"
-git push
+./publish-all.sh --dry-run   # preview what would change
+./publish-all.sh             # apply + commit + push + print Medium import URLs
 ```
 
-The script picks up the latest `blog-source--V{N}.md` automatically. Older drafts are ignored.
+`publish-all.sh` runs `publish.py --apply`, commits the result, pushes to GitHub (which triggers a Pages rebuild), and prints the URLs to paste into `https://medium.com/p/import`.
+
+`publish.py` picks up the latest `blog-source--V{N}.md` automatically. Older drafts are ignored.
+
+### After the script runs
+
+1. GitHub Pages rebuilds in ~1 min: https://jamesypub.github.io/writings/
+2. Paste the printed URL into `https://medium.com/p/import` → creates a draft on Medium
+3. Review the draft on Medium, click Publish
 
 ## Allowlist rule
 
