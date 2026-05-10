@@ -1,84 +1,143 @@
 # CLAUDE.md — writings repo
 
-Public repo for finished blog posts. Pushed to `github.com/jamesypub/writings`.
+Public repo for finished blog posts. Pushed to `github.com/jamesypub/writings`. Rendered site at `jamesypub.github.io/writings`.
 
 Drafts and review history stay in `~/jycode/blog-*/`. Only allowlisted posts move from there to here.
 
-## Publish workflow
+---
 
-One command:
+## Publishing an existing blog (routine case)
+
+You've already set up the blog (it's in the allowlist). New version is ready in `~/jycode/blog-*/Output/blog-source--V{N}.md`.
 
 ```bash
 cd ~/writings
-./publish-all.sh --dry-run   # preview what would change
-./publish-all.sh             # apply + commit + push + print Medium import URLs
+./publish-all.sh --dry-run   # preview (optional)
+./publish-all.sh             # apply + commit + push
 ```
 
-`publish-all.sh` runs `publish.py --apply`, commits the result, pushes to GitHub (which triggers a Pages rebuild), and prints the URLs to paste into `https://medium.com/p/import`.
+The script:
+1. Copies the latest `blog-source--V{N}.md` + referenced images from the allowlisted `jycode/` folder.
+2. Injects Jekyll front matter (title, permalink) so Pages renders it cleanly.
+3. Commits and pushes to GitHub.
+4. Prints two URLs to paste into Medium.
 
-`publish.py` picks up the latest `blog-source--V{N}.md` automatically. Older drafts are ignored.
+GitHub Pages rebuilds in ~1 minute. The site is at:
+- Homepage: https://jamesypub.github.io/writings/
+- Each post: https://jamesypub.github.io/writings/posts/&lt;slug&gt;/
 
-### After the script runs
+## Importing to Medium (one-time, after each publish)
 
-1. GitHub Pages rebuilds in ~1 min: https://jamesypub.github.io/writings/
-2. Paste the printed URL into `https://medium.com/p/import` → creates a draft on Medium
-3. Review the draft on Medium, click Publish
+1. Open `https://medium.com/p/import`
+2. Paste the URL the script printed:
+   `https://github.com/jamesypub/writings/blob/main/posts/<slug>/README.md`
+3. Click **Import**. Medium creates a draft.
+4. Fix the things Medium's importer drops (see checklist below).
+5. Click **Publish** on Medium.
 
-## Allowlist rule
+### Medium post-import checklist — do these BEFORE publishing
 
-`scripts/publish.py` has a hardcoded `ALLOWLIST` at the top. Nothing publishes unless it's listed there. To publish a new blog, add an entry — do not bypass the allowlist.
+Medium's importer strips several things. Every time, in Medium's editor:
 
-Current allowlist:
+- [ ] **Title** — set the H1 title at the top (importer drops it)
+- [ ] **Byline at top** — retype `*By X and Y*` as a byline and use "Add authors" to link co-authors who are Medium users
+- [ ] **Author credits at end** — add a bio block for co-authors who aren't on Medium
+- [ ] **Image captions** — check that figure captions render italic (importer occasionally styles them as body text)
+
+## Adding a NEW blog (the first time)
+
+When you want to publish a different blog for the first time:
+
+### 1. Confirm the source blog is ready
+The source blog in `~/jycode/blog-*/` must have:
+- An `Output/` folder containing `blog-source--V{N}.md` files
+- Images referenced as `![alt](generated-diagrams/<name>.png)` or similar relative paths inside the blog folder
+
+### 2. Add it to the allowlist
+Edit `~/writings/scripts/publish.py` and add a new entry to `ALLOWLIST`:
+
+```python
+ALLOWLIST = [
+    {
+        "source_dir": HOME / "jycode/blog-agent-orchestration-architecture",
+        "post_dir":   REPO_ROOT / "posts/agent-orchestration-patterns",
+        "title":      "Building multi-agent applications: orchestration patterns",
+    },
+    # ← Add your new blog here, same shape:
+    {
+        "source_dir": HOME / "jycode/blog-<your-blog-folder>",
+        "post_dir":   REPO_ROOT / "posts/<your-post-slug>",
+        "title":      "Your Blog Title Here",
+    },
+]
+```
+
+Notes:
+- `source_dir` — absolute path to the private jycode blog folder
+- `post_dir` — where it'll land in this public repo; pick a URL-friendly slug
+- `title` — used in Jekyll front matter and as the Pages page title
+
+### 3. Update the homepage index
+Edit `~/writings/index.md` and add the new post to the list:
+
+```markdown
+- **[Your Blog Title Here](posts/<your-post-slug>/)**
+  One-sentence summary of the post.
+```
+
+Also add it to `~/writings/README.md` (the GitHub repo landing page), same format.
+
+### 4. Publish
+```bash
+cd ~/writings
+./publish-all.sh --dry-run   # sanity-check what will be copied
+./publish-all.sh             # apply + commit + push
+```
+
+### 5. Import to Medium
+Same Medium import flow as above, with the new URL the script prints.
+
+---
+
+## Safety / allowlist rules
+
+`scripts/publish.py` has a hardcoded `ALLOWLIST` at the top. **Nothing publishes unless it's listed there.** To publish a new blog, add an entry — do not bypass the allowlist.
+
+Only `.md` and `.png/.jpg/.jpeg/.svg` files are permitted. `.docx`, `changes.md`, session memory, older `V{N}` files, and any other file type are rejected — the script aborts if it sees one.
+
+**Current allowlist:**
 - `~/jycode/blog-agent-orchestration-architecture` → `posts/agent-orchestration-patterns/`
-
-Only `.md` and `.png/.jpg/.jpeg/.svg` files are permitted. `.docx`, `changes.md`, session memory, older `V{N}` files, and any other file type are rejected.
 
 ## Repo structure
 
 ```
 writings/
-├── README.md                                 # public index
-├── CLAUDE.md                                 # this file
+├── README.md                             # GitHub landing page
+├── CLAUDE.md                             # this file
+├── _config.yml                           # Jekyll / GitHub Pages config
+├── index.md                              # Pages homepage (rendered at jamesypub.github.io/writings/)
+├── publish-all.sh                        # one-command publish wrapper
 ├── posts/
 │   └── <post-slug>/
-│       ├── README.md                         # the post (GitHub renders it)
-│       └── images/                           # referenced PNGs
+│       ├── README.md                     # the post (Jekyll front matter + markdown)
+│       └── images/                       # referenced PNGs
 └── scripts/
-    ├── publish.py                            # allowlist-gated copy tool
+    ├── publish.py                        # allowlist-gated copy tool
     └── README.md
 ```
 
-## Publishing to Medium
-
-1. Run the publish workflow above so the post is on GitHub.
-2. Go to `https://medium.com/p/import`.
-3. Paste the GitHub URL, e.g. `https://github.com/jamesypub/writings/blob/main/posts/agent-orchestration-patterns/README.md`.
-4. Medium pulls the markdown and images; review formatting, then publish.
-
-Images load from `raw.githubusercontent.com` automatically — no path rewriting needed.
-
-### Medium post-import checklist (things the importer does NOT do)
-
-After clicking Import, these need manual fixes in Medium's editor before publishing:
-
-- **Title** — Medium imports with no title or a wrong one. Set the H1 title manually at the top.
-- **Authors at the top** — byline line (e.g. *By James Yang and Anjan Dave*) needs to be typed in; add co-authors via Medium's "Add authors" feature so they appear on the byline.
-- **Authors at the end** — add an author bio / co-author credit block at the bottom if the co-author isn't a Medium user (Medium's author linking only works for registered Medium users).
-- **Check image captions** — figure captions occasionally import as body text instead of italic caption style.
-
-Rationale: Medium's importer strips the first H1, doesn't parse author metadata from markdown, and has no concept of multi-author bylines from `*By X and Y*` text.
-
-### First published post
-
-V41 of agent-orchestration-patterns published 2026-05-10:
-https://medium.com/p/e5a17d27c404
-
 ## Git auth
 
-Pushes authenticate as `jamesypub` via a stored PAT at `~/.git-credentials-jamesypub` (mode 600). The repo's `.git/config` overrides the inherited `gh` credential helper so the correct token is used. See memory file `reference_jamesypub_git_auth.md` if auth ever breaks.
+Pushes authenticate as `jamesypub` via a stored PAT at `~/.git-credentials-jamesypub` (mode 600). The repo's `.git/config` has a URL-scoped helper override so the correct token is used instead of the `gh` CLI's (which is logged in as `jamesyangoc`). See memory file `reference_jamesypub_git_auth.md` if auth ever breaks.
 
 ## Rules
 
 - Never copy files directly from `~/jycode/blog-*` into this repo — always use `publish.py`.
 - Never commit `.docx`, drafts, `changes.md`, or anything outside the allowlist.
 - Always `git commit` and `git push` when done (project rule from `~/jycode/CLAUDE.md`).
+
+## Published posts
+
+| Version | Date | Medium URL |
+|---|---|---|
+| V41 of agent-orchestration-patterns | 2026-05-10 | https://medium.com/p/e5a17d27c404 |
