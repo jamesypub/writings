@@ -1,0 +1,22 @@
+title: Writings
+description: Long-form posts on AI, agents, and the systems around them.
+author: James Yang
+
+theme: minima
+minima:
+  skin: classic
+
+# Show full post list on the index page
+show_excerpts: true
+
+# Exclude internal files from the built site
+exclude:
+  - scripts/
+  - CLAUDE.md
+  - .gitignore
+  - README.md
+
+# Ignore files that happen to start with underscore but aren't Jekyll includes
+keep_files:
+  - posts
+

@@ -91,6 +91,23 @@ def publish_one(entry: dict, apply: bool) -> None:
     for ref, img_path in images:
         new_text = new_text.replace(f"]({ref})", f"](images/{img_path.name})")
 
+    # Strip existing H1 (title goes in front matter instead) and inject Jekyll front matter.
+    lines = new_text.splitlines()
+    if lines and lines[0].startswith("# "):
+        lines = lines[1:]
+        while lines and not lines[0].strip():
+            lines.pop(0)
+    body = "\n".join(lines)
+    permalink = f"/posts/{post_dir.name}/"
+    front_matter = (
+        "---\n"
+        f"layout: page\n"
+        f"title: {entry['title']!r}\n"
+        f"permalink: {permalink}\n"
+        "---\n\n"
+    )
+    new_text = front_matter + body
+
     images_dir = post_dir / "images"
     post_readme = post_dir / "README.md"
 

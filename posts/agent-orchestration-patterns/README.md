@@ -1,4 +1,8 @@
-# Building multi-agent applications: orchestration patterns
+---
+layout: page
+title: 'Building multi-agent applications: orchestration patterns'
+permalink: /posts/agent-orchestration-patterns/
+---
 
 *By James Yang and Anjan Dave*
 
