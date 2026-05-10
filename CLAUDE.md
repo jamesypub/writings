@@ -57,6 +57,22 @@ writings/
 
 Images load from `raw.githubusercontent.com` automatically — no path rewriting needed.
 
+### Medium post-import checklist (things the importer does NOT do)
+
+After clicking Import, these need manual fixes in Medium's editor before publishing:
+
+- **Title** — Medium imports with no title or a wrong one. Set the H1 title manually at the top.
+- **Authors at the top** — byline line (e.g. *By James Yang and Anjan Dave*) needs to be typed in; add co-authors via Medium's "Add authors" feature so they appear on the byline.
+- **Authors at the end** — add an author bio / co-author credit block at the bottom if the co-author isn't a Medium user (Medium's author linking only works for registered Medium users).
+- **Check image captions** — figure captions occasionally import as body text instead of italic caption style.
+
+Rationale: Medium's importer strips the first H1, doesn't parse author metadata from markdown, and has no concept of multi-author bylines from `*By X and Y*` text.
+
+### First published post
+
+V41 of agent-orchestration-patterns published 2026-05-10:
+https://medium.com/p/e5a17d27c404
+
 ## Git auth
 
 Pushes authenticate as `jamesypub` via a stored PAT at `~/.git-credentials-jamesypub` (mode 600). The repo's `.git/config` overrides the inherited `gh` credential helper so the correct token is used. See memory file `reference_jamesypub_git_auth.md` if auth ever breaks.
