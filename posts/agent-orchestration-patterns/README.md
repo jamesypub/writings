@@ -78,8 +78,6 @@ Patterns 1 through 4 are well-established building blocks covered extensively in
 
 ### Pattern 3: Router
 
-<!-- //anjan-start: Router (P3) — do not modify content -->
-
 ![Router Pattern](images/v32_pattern_3.png)
 
 The router pattern is typical in enterprise environments where different sub-agents are designated to perform distinct tasks based on the input. A router agent acts as a single classifier component to analyze incoming requests and direct execution to a specialized agent based on known input conditions. The router pattern works well when there are distinct categories of work that each sub-agent can handle separately. There is no decomposition of the tasks by the router; it classifies and dispatches, nothing more.
@@ -102,13 +100,9 @@ The router pattern is typical in enterprise environments where different sub-age
 
 **Statelessness:** The router should be stateless. The router should not maintain conversation history or session context. If needed, have a separate session state layer upstream of the router or a state managed by the downstream agent.
 
-<!-- //anjan-end: Router (P3) -->
-
 To illustrate **approach #1 (LLM-based routing)** in the HCM domain: LLM-based routing is the right choice here because HCM queries are paraphrased many ways and cross domain boundaries. Embedding similarity scores words, not intent, so queries that mix vocabulary from two domains (paycheck + leave) score equally against both and the router flips a coin. Rules are too brittle for the range of phrasing employees use. The router sends the employee query and descriptions of five domain agents to an LLM. The five agents are Pay Profile, Benefits Advisor, Scheduling, Time & Attendance, and PTO Coordinator. The LLM returns the target agent. For example, "What happens to my paycheck when I'm on leave?" is ambiguous: it could be Pay Profile or PTO. The LLM correctly routes to Pay Profile because the question is about compensation impact, not leave balance. HR queries often cross system boundaries that employees don't think about. LLM-based routing handles this natural ambiguity at the cost of an additional LLM call per request.
 
 ### Pattern 4: Hierarchical (orchestrator/agent)
-
-<!-- //anjan-start: Hierarchical (P4) — do not modify content -->
 
 ![Hierarchical Orchestrator Pattern](images/v32_pattern_4.png)
 
@@ -177,8 +171,6 @@ supervisor = Agent(
 )
 supervisor("Process job change: Employee promoted, relocation from TX to CA")
 ```
-
-<!-- //anjan-end: Hierarchical (P4) -->
 
 ## Advanced patterns (5-8)
 
