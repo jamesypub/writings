@@ -26,17 +26,17 @@ In this post, you learn:
 
 > **Note:** *Supervisor* and *sub-agent* are roles within patterns, not patterns themselves. A supervisor (also called orchestrator) is the agent that classifies, delegates, or decomposes work. The supervisor role appears in the router (classify and dispatch), hierarchical (decompose, delegate, synthesize), and dynamic worker pool (runtime-scaled delegation) patterns. A sub-agent is an agent that receives delegated work. The team-of-agents pattern has no supervisor; peers hand off to each other. Sequential, parallel, broadcast, and graph-based patterns use structural coordination defined by the developer, not agent-driven supervision.
 
-These eight patterns range from fully deterministic to fully model-driven. Deterministic patterns give you predictable, auditable, and cost-efficient execution -- the developer defines paths, conditions, and control flow at design time. Prefer these when the task structure is known in advance. Model-driven patterns add flexibility when the task genuinely requires runtime reasoning, with the LLM deciding routing, decomposition, or handoffs. The trade-off is higher cost and less predictable behavior. Most production systems combine both: deterministic coordination for the predictable parts, model-driven orchestration for the parts that require reasoning.
+These eight patterns range from fully deterministic to fully model-driven. Deterministic patterns give you predictable, auditable, and cost-efficient execution. Individual agents still use LLMs, but the developer defines paths, conditions, and control flow at design time rather than letting the LLM decide orchestration at runtime. Prefer these when the task structure is known in advance. Model-driven patterns add flexibility when the task genuinely requires runtime reasoning, with the LLM deciding routing, decomposition, or handoffs. The trade-off is higher cost and less predictable behavior. Most production systems combine both: deterministic coordination for the predictable parts, model-driven orchestration for the parts that require reasoning.
 
 ## Which pattern should you use?
 
-The following overview and decision flowchart introduce the eight patterns visually. Use the decision matrix and comparison table below them to identify your starting point, then read the corresponding pattern section.
+The following overview and decision flowchart introduce the eight patterns visually. Use the decision matrix and comparison table below them to identify your starting point, then read the corresponding pattern section. The diagrams show each pattern's primary data flow. In production, most patterns (hierarchical, team-of-agents, graph-based, dynamic worker pool) include feedback loops where the orchestrator also aggregates results and evaluates them, iterating until a stopping condition is met.
 
 ![Eight Orchestration Patterns Overview](images/v32_overview.png)
 *Figure 1: Eight orchestration patterns at a glance.*
 
 ![Decision Flowchart](images/v32_flowchart.png)
-*Figure 2: Decision flowchart covering all eight patterns. Follow the questions to identify the right pattern for your workflow.*
+*Figure 2: Decision flowchart covering the eight patterns. Follow the questions to identify the right pattern for your workflow.*
 
 | If your workflow needs... | Use this pattern | Start here if... | Anti-pattern (don't use when) |
 |--------------------------|-----------------|------------------|-------------------------------|
@@ -104,7 +104,7 @@ The router pattern is typical in enterprise environments where different sub-age
 
 <!-- //anjan-end: Router (P3) -->
 
-To illustrate LLM-based routing in the HCM domain: the router sends the employee query and descriptions of five domain agents to an LLM. The five agents are Pay Profile, Benefits Advisor, Scheduling, Time & Attendance, and PTO Coordinator. The LLM returns the target agent. For example, "What happens to my paycheck when I'm on leave?" is ambiguous -- it could be Pay Profile or PTO. The LLM correctly routes to Pay Profile because the question is about compensation impact, not leave balance. HR queries often cross system boundaries that employees don't think about. LLM-based routing handles this natural ambiguity at the cost of an additional LLM call per request.
+To illustrate **approach #1 (LLM-based routing)** in the HCM domain: LLM-based routing is the right choice here because HCM queries are paraphrased many ways and cross domain boundaries. Embedding similarity scores words, not intent, so queries that mix vocabulary from two domains (paycheck + leave) score equally against both and the router flips a coin. Rules are too brittle for the range of phrasing employees use. The router sends the employee query and descriptions of five domain agents to an LLM. The five agents are Pay Profile, Benefits Advisor, Scheduling, Time & Attendance, and PTO Coordinator. The LLM returns the target agent. For example, "What happens to my paycheck when I'm on leave?" is ambiguous: it could be Pay Profile or PTO. The LLM correctly routes to Pay Profile because the question is about compensation impact, not leave balance. HR queries often cross system boundaries that employees don't think about. LLM-based routing handles this natural ambiguity at the cost of an additional LLM call per request.
 
 ### Pattern 4: Hierarchical (orchestrator/agent)
 
@@ -318,6 +318,44 @@ orchestrator = Agent(
 )
 orchestrator("Add OAuth2 authentication to the user API with rate limiting")
 ```
+
+## Pitfalls to avoid in agentic architectures
+
+The patterns above resemble classic integration topologies (hub-and-spoke, producer-consumer, parent-child), but agent systems introduce failure modes that traditional integration patterns do not have. LLM nondeterminism, context accumulation, and tool-selection at scale create a distinct class of production risks. Before you build, know where these systems typically break.
+
+#### 1. Cascading hallucination across handoffs
+
+A downstream agent treats an upstream agent's fabricated output as ground truth and amplifies the error. Mitigation: verify outputs at handoff boundaries with schema validation, tool-result cross-checks, or an evaluator agent before the next agent consumes them.
+
+#### 2. Token-cost runaway from naive context passing
+
+Passing full conversation history to every sub-agent makes cost and latency scale super-linearly with depth. Mitigation: pass only the minimum context each sub-agent needs, summarize upstream context at handoffs, and use structured message types instead of raw history.
+
+#### 3. Unbounded handoff loops in team and graph patterns
+
+Without a handoff cap, role C hands back to role B, which hands to role A, which hands back to B indefinitely. Mitigation: set `max_handoffs`, track handoff chains for cycle detection, and force an escalation path when the cap is hit.
+
+#### 4. Orchestrator context-window bleed
+
+Hierarchical orchestrators that accumulate every sub-agent response hit their own context window before synthesis. Mitigation: have sub-agents return structured summaries rather than full reasoning traces, compact or evict old turns, and keep only the synthesis inputs the orchestrator needs.
+
+#### 5. Retry logic that assumes determinism
+
+Classic integration retries assume the same input produces the same output. LLM nondeterminism breaks this assumption: a retry may return a different plan, creating state drift. Mitigation: use idempotency keys on tool calls, compare reasoning traces rather than exact outputs, and prefer deterministic code paths (the graph pattern) where correctness matters more than flexibility.
+
+#### 6. Tool-selection drift at scale
+
+Past roughly 30 tools on a single agent, selection accuracy collapses and the model picks plausible-but-wrong tools. Mitigation: use progressive disclosure (next section) to load tool metadata on demand instead of up front.
+
+#### 7. Silent partial failure in parallel fan-in
+
+An aggregator receives 3 of 5 branches and treats that as success, silently dropping two agents' work. Mitigation: require explicit branch status in the aggregator contract, fail closed when a branch times out, and log partial-result incidents.
+
+#### 8. Authority ambiguity in broadcast patterns
+
+With no designated writer to shared memory, peer agents race and produce inconsistent state. Mitigation: use optimistic concurrency with version stamps on shared memory keys, or designate a single write-authority agent per memory region.
+
+The next section dives into pitfall 6, tool-selection drift, and how progressive disclosure addresses it.
 
 ## From patterns to production: managing tool discovery at scale
 
